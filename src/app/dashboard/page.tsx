@@ -8,6 +8,8 @@ import {
   deleteDoc,
   doc,
   QueryDocumentSnapshot,
+  DocumentData,            // 추가
+  CollectionReference,     // 추가
 } from "firebase/firestore";
 import { db } from "@/lib/firestore";
 
@@ -20,11 +22,14 @@ export default function Dashboard() {
   >([]);
 
   // 실시간 구독
-  useEffect(() => {
-    return onSnapshot(collection(db, "channels"), (snap) => {
-      setChannels(snap.docs as any);
-    });
-  }, []);
+ useEffect(() => {
+  // ✅ 제네릭 컬렉션 참조
+  const channelCol = collection(db, "channels") as CollectionReference<ChannelDoc>;
+
+  return onSnapshot(channelCol, (snap) => {
+    setChannels(snap.docs);          // any 캐스팅 필요 X
+   });
+ }, []);
 
   const handleAdd = async () => {
     if (!url.trim()) return;
