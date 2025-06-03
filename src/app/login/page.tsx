@@ -1,6 +1,6 @@
-export const dynamic = "force-dynamic";
+"use client";                       // ① 항상 첫 줄
+export const dynamic = "force-dynamic"; // ② 그다음
 
-"use client";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
