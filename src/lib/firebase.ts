@@ -2,25 +2,25 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
-/* ───── 0. ENV 읽기 ───── */
+/* 0. 환경변수 읽기 */
 const apiKey     = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
 const authDomain = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
 const projectId  = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
-/* ───── 1. 빌드 서버에서 키가 없으면 빈 export 후 종료 ───── */
-if (!apiKey || !authDomain || !projectId) {
-  console.warn("⚠️  Firebase env vars missing – skipping init during build.");
-  // 빈 객체를 export 해서 다른 모듈 import 에러 방지
-  export const auth     = undefined as any;
-  export const provider = undefined as any;
-  export const app      = undefined as any;
-} else {
-  /* ───── 2. 정상 초기화 & export ───── */
-  const firebaseConfig = { apiKey, authDomain, projectId };
-  const appInstance =
-    getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+/* 1. 변수 선언(초기값 undefined) → 반드시 **파일 최상단** 스코프 */
+let app: ReturnType<typeof initializeApp> | undefined;
+let auth: ReturnType<typeof getAuth> | undefined;
+let provider: GoogleAuthProvider | undefined;
 
-  export const app      = appInstance;
-  export const auth     = getAuth(appInstance);
-  export const provider = new GoogleAuthProvider();
+/* 2. 조건부 초기화 (빌드 서버에서 env 없으면 그냥 패스) */
+if (apiKey && authDomain && projectId) {
+  const firebaseConfig = { apiKey, authDomain, projectId };
+  app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  provider = new GoogleAuthProvider();
+} else {
+  console.warn("⚠️  Firebase env vars missing – skipped init.");
 }
+
+/* 3. 한 번만 export  */
+export { app, auth, provider };
