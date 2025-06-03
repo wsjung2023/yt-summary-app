@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 "use client";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "@/lib/firebase";
