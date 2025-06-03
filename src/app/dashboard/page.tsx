@@ -8,7 +8,6 @@ import {
   deleteDoc,
   doc,
   QueryDocumentSnapshot,
-  DocumentData,            // 추가
   CollectionReference,     // 추가
 } from "firebase/firestore";
 import { db } from "@/lib/firestore";
