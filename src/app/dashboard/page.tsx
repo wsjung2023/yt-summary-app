@@ -7,10 +7,9 @@ import {
   query,
   orderBy,
   onSnapshot,
-  DocumentData,
 } from "firebase/firestore";
-import { db } from "@/lib/firestore";   // ← 프로젝트 구조에 맞춰 이미 존재하는 경로
-import { addChannelFn } from "@/lib/firebase"; // ← addChannel 클라우드-함수 호출 헬퍼
+import { db } from "@/lib/firestore";          // ← 실제 경로 확인
+import { addChannelFn } from "@/lib/firebase"; // ← Cloud Function 호출 헬퍼
 
 /* ---------- 타입 ---------- */
 type ChannelDoc = { id: string; url: string };
@@ -38,7 +37,7 @@ export default function Dashboard() {
         snap.docs.map(d => {
           const { url } = d.data() as { url: string };
           return { id: d.id, url };
-        })
+        }),
       );
     });
   }, [uid]);
@@ -51,10 +50,10 @@ export default function Dashboard() {
       snap =>
         setVideos(
           snap.docs.map(d => {
-            const data = d.data() as Omit<VideoDoc, "id">;
-            return { id: d.id, ...data };
-          })
-        )
+            const { title, url, thumb } = d.data() as Omit<VideoDoc, "id">;
+            return { id: d.id, title, url, thumb };
+          }),
+        ),
     );
   }, [uid]);
 
@@ -66,7 +65,7 @@ export default function Dashboard() {
       alert(`✅ 추가 완료! id=${res.data.id}`);
       setUrl("");
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : `${e}`;
+      const msg = e instanceof Error ? e.message : String(e);
       alert(`❌ 실패: ${msg}`);
     }
   };
