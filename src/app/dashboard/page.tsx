@@ -11,6 +11,8 @@ import {
 import { db } from "../../lib/firestore";      // ← 실제 경로 확인
 import { addChannelFn } from "@/lib/firebase";
 
+type ChannelDoc = { id: string; url: string };
+
 export default function Dashboard() {
   /* ✏️ ① 채널 목록 */
   const [channels, setChannels] = useState<any[]>([]);
@@ -22,11 +24,11 @@ export default function Dashboard() {
   const uid = "demo"; // 실제로는 auth.currentUser!.uid
 
   /* ------------ 실시간 채널 목록 ------------- */
-  useEffect(() => {
+ useEffect(() => {
     const col = collection(db, `users/${uid}/channels`);
-    return onSnapshot(query(col), snap =>
-      setChannels(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-    );
+    return onSnapshot(query(col, orderBy("createdAt", "desc")), snap => {
+      setChannels(snap.docs.map(d => ({ id: d.id, ...(d.data() as { url: string }) })));
+    });
   }, [uid]);
 
   /* ------------ 실시간 영상 목록 ------------- */
