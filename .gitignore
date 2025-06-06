@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ───────── 불필요한 빌드·캐시 폴더 전역 무시 ─────────
+**/node_modules
+**/.next
+

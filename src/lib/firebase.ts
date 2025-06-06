@@ -1,6 +1,8 @@
 "use client";
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
+// 맨 위 기존 import 들 아래
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 /* 0. 환경변수 읽기 */
 const apiKey     = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
@@ -24,3 +26,9 @@ if (apiKey && authDomain && projectId) {
 
 /* 3. 한 번만 export  */
 export { app, auth, provider };
+
+export const functions = getFunctions();                 // us-central1 기본
+export const addChannelFn = httpsCallable<
+  { uid: string; url: string },                          //   보내는 타입
+  { id: string }                                         //   돌아오는 타입
+>(functions, "addChannel");
