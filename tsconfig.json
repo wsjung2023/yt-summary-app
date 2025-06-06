@@ -1,12 +1,42 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ES2022",
-    "outDir": "lib",               // **반드시 lib 로**
-    "rootDir": "src",
-    "strict": true,
-    "esModuleInterop": true
+    "target": "es5", // ES5 수준의 JS로 트랜스파일 (Next.js 기본값)
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ], // 사용할 JS 라이브러리 환경
+    "allowJs": true, // JS 파일도 함께 컴파일 허용:contentReference[oaicite:3]{index=3}
+    "skipLibCheck": true, // 라이브러리 타입체크 건너뜀 (컴파일 속도 향상)
+    "strict": true, // 엄격한 타입 검사를 활성화
+    "forceConsistentCasingInFileNames": true, // 파일명 대소문자 일관성 체크
+    "noEmit": true, // 컴파일 시 JS 결과물 생성하지 않음 (타입체크 전용)
+    "esModuleInterop": true, // CommonJS 모듈 호환성 허용
+    "module": "esnext", // ES 모듈로 코드 생성:contentReference[oaicite:4]{index=4}
+    "moduleResolution": "node", // 모듈 해석을 Node 방식으로:contentReference[oaicite:5]{index=5}
+    "resolveJsonModule": true, // JSON 파일 import 허용
+    "isolatedModules": true, // 각 파일을 개별 모듈로 처리
+    "jsx": "preserve", // JSX 문법 유지 (트랜스파일하지 않음):contentReference[oaicite:6]{index=6}
+    "baseUrl": ".", // 프로젝트 루트 경로를 기준으로 절대 경로 설정:contentReference[oaicite:7]{index=7}:contentReference[oaicite:8]{index=8}
+    "paths": {
+      "@/*": [
+        "src/*"
+      ] // "@/..." 경로를 "src/..."로 매핑 (예시):contentReference[oaicite:9]{index=9}
+    },
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["src/**/*"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
+  ], // TypeScript 파일들과 Next.js 타입 선언 포함
+  "exclude": [
+    "node_modules"
+  ] // 타입검사에서 제외할 경로
 }
-

@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 
 import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "@/lib/firebase";
+import { auth, provider } from "../../lib/firebase";
 import { useRouter } from "next/navigation";
 
 export default function Login() {
