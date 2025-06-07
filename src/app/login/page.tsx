@@ -1,25 +1,32 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-
+import { useEffect } from "react";
 import { auth, provider } from "../../lib/firebase";
 import { useRouter } from "next/navigation";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, User } from "firebase/auth";
 
 export default function Login() {
   const router = useRouter();
-  const auth = getAuth();
+  const auth   = getAuth();
   const provider = new GoogleAuthProvider();
   // 빌드 단계(키 없음) · 런타임(초기화 실패) 모두 대비
   const disabled = !auth || !provider;
+
+  // 이미 로그인된 유저라면 대시보드로 리다이렉트
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((u: User | null) => {
+      if (u) router.replace("/dashboard");
+    });
+    return () => unsubscribe();
+  }, [auth, router]);
 
   const handleLogin = async () => {
     try {
       await signInWithPopup(auth, provider);
       router.push("/dashboard");
-    } catch (err) {
-      console.error(err);
-      alert("로그인에 실패했습니다.");
+    } catch (e: any) {
+      alert("로그인 실패: " + (e.message || e));
     }
   };
 
