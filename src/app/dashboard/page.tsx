@@ -1,8 +1,5 @@
 // src/app/dashboard/page.tsx
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
@@ -22,166 +19,121 @@ type VideoDoc   = { id: string; url: string; title: string; thumb: string };
 
 export default function Dashboard() {
   const router = useRouter();
-  // 1) Firebase Auth 상태 + uid
-  const [user, setUser] = useState<User| null | undefined>(undefined);
+
+  // ── 1) Auth 상태 ────────────────────────────────
+  const [user, setUser] = useState<User | null | undefined>(undefined);
   const [uid,  setUid]  = useState<string>("");
-  
-  // 3) 실시간 채널 & 영상 구독
 
+  // ── 2) 구독 데이터 상태 ───────────────────────────
+  const [channels, setChannels] = useState<ChannelDoc[]>([]);
+  const [videos,   setVideos]   = useState<VideoDoc[]>([]);
+  const [url,      setUrl]      = useState<string>("");
 
-
-  // ───────── onAuthStateChanged ─────────
+  // ── 3) onAuthStateChanged ─────────────────────────
   useEffect(() => {
     const auth = getAuth();
-    // 로그인 상태 변화 구독
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
+    const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
-      if (u) {
-        setUid(u.uid);
-      } else {
-        // 로그아웃 되었거나 인증 안 된 상태면 /login 으로 보냄
-        router.replace("/login");
-      }
+      if (u) setUid(u.uid);
+      else  router.replace("/login");
     });
-    return () => unsubscribe();
+    return () => unsub();
   }, [router]);
 
-  // 로딩 중
-  if (user === undefined) {
-    return <p className="p-8 text-center">로딩 중...</p>;
-  }
-
-  // 로그인 필요
-  if (!uid) {
-    return (
-      <main className="p-8 max-w-xl mx-auto text-center">
-        <h1 className="text-2xl font-bold mb-4">로그인이 필요합니다.</h1>
-        <p>로그인 후에 채널 목록과 영상을 확인할 수 있습니다.</p>
-      </main>
-    );
-  }
-
-  // ─── 2) channel subscription ────────────────────────────
-  const [channels, setChannels] = useState<ChannelDoc[]>([]);
+  // ── 4) 채널 구독 ───────────────────────────────────
   useEffect(() => {
-    const colRef = collection(db, `users/${uid}/channels`);
-    const q      = query(colRef, orderBy("createdAt", "desc"));
-    const unsub  = onSnapshot(q, (snap) => {
-      const list = snap.docs.map(d => {
-        const { url } = d.data() as { url: string };
-        return { id: d.id, url };
-      });
-      setChannels(list);
+    if (!uid) return;
+    const col = collection(db, `users/${uid}/channels`);
+    const q   = query(col, orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, snap => {
+      setChannels(
+        snap.docs.map(d => {
+          const { url } = d.data() as { url: string };
+          return { id: d.id, url };
+        })
+      );
     });
     return () => unsub();
   }, [uid]);
 
-  // ─── 3) video subscription ──────────────────────────────
-  const [videos,   setVideos]   = useState<VideoDoc[]>([]);  
+  // ── 5) 영상 구독 ───────────────────────────────────
   useEffect(() => {
-    const colRef = collection(db, `users/${uid}/videos`);
-    const q      = query(colRef, orderBy("publishedAt", "desc"));
-    const unsub  = onSnapshot(q, (snap) => {
-      const list = snap.docs.map(d => {
-        const data = d.data() as Omit<VideoDoc, "id">;
-        return { id: d.id, ...data };
-      });
-      setVideos(list);
+    if (!uid) return;
+    const col = collection(db, `users/${uid}/videos`);
+    const q   = query(col, orderBy("publishedAt", "desc"));
+    const unsub = onSnapshot(q, snap => {
+      setVideos(
+        snap.docs.map(d => {
+          const data = d.data() as Omit<VideoDoc, "id">;
+          return { id: d.id, ...data };
+        })
+      );
     });
     return () => unsub();
   }, [uid]);
 
-
-  // 3.5) 채널 추가 삭제
-  const [url,      setUrl]      = useState<string>("");  
+  // ── 6) 핸들러들 ───────────────────────────────────
   const handleAdd = async () => {
-    const trimmed = url.trim();
-    if (!url.trim()) return;
+    const val = url.trim();
+    if (!val) return;
     try {
-      const res = await addChannelFn({ uid, url: url.trim() });
-      alert(`✅ 채널 추가 완료! id=${res.data.id}`);
+      const res = await addChannelFn({ uid, url: val });
+      alert(`✅ 추가: ${res.data.id}`);
       setUrl("");
     } catch (e: any) {
-      alert(`❌ 채널 추가 실패: ${e.message || e}`);
+      alert(`❌ 에러: ${e.message||e}`);
     }
   };
-
-  // ───────── 채널 삭제 핸들러 ─────────
-  const handleDelete = async (channelId: string) => {
-    try {
-      await deleteDoc(doc(db, `users/${uid}/channels/${channelId}`));
-    } catch (e: any) {
-      alert(`❌ 삭제 실패: ${e.message || e}`);
-    }
+  const handleDelete = async (id: string) => {
+    await deleteDoc(doc(db, `users/${uid}/channels/${id}`));
   };
 
-  
-  // ─── 5) final JSX ───────────────────────────────────────
-  //return (
-  // <main className="p-8 space-y-6 max-w-xl mx-auto">
-  //    {/* … 나머지 UI … */}
-  //  </main>
-  //);
-
-  // ─── 5) 로딩 / 로그인 필요 화면 ───────────
+  // ── 7) 로딩 / 로그인 필요 화면 ─────────────────────
   if (user === undefined) {
-    return <p className="p-8 text-center">로딩 중...</p>;
+    return <p className="p-8 text-center">로딩 중…</p>;
   }
   if (!uid) {
     return (
       <main className="p-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">로그인이 필요합니다</h1>
-        <p>로그인 후 이용하세요.</p>
+        <h1 className="text-2xl font-bold">로그인이 필요합니다</h1>
       </main>
     );
   }
-  // ───────── UI 렌더링 ─────────
+
+  // ── 8) 최종 UI 렌더링 ─────────────────────────────
   return (
     <main className="p-8 space-y-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold">내 채널 목록</h1>
 
-      {/* 입력 + 추가 버튼 */}
       <div className="flex gap-2">
         <input
-          className="flex-1 border px-3 py-2 rounded"
-          placeholder="https://www.youtube.com/@channel"
           value={url}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={e => setUrl(e.target.value)}
+          placeholder="https://www.youtube.com/@channel"
+          className="flex-1 border px-3 py-2 rounded"
         />
-        <button
-          className="bg-indigo-600 text-white px-4 py-2 rounded"
-          onClick={handleAdd}
-        >
+        <button onClick={handleAdd} className="bg-indigo-600 text-white px-4 rounded">
           추가
         </button>
       </div>
 
-      {/* 채널 리스트 */}
       <ul className="space-y-2">
-        {channels.map((c) => (
-          <li
-            key={c.id}
-            className="flex justify-between items-center border px-3 py-2 rounded"
-          >
+        {channels.map(c => (
+          <li key={c.id} className="flex justify-between items-center border px-3 py-2 rounded">
             <span className="truncate">{c.url}</span>
-            <button
-              className="text-red-500 hover:bg-red-100 px-2 rounded"
-              onClick={() => handleDelete(c.id)}
-            >
+            <button onClick={() => handleDelete(c.id)} className="text-red-500">
               ✖
             </button>
           </li>
         ))}
       </ul>
 
-      {/* 최근 영상 리스트 */}
       <h2 className="text-xl font-bold pt-6">📺 최근 영상</h2>
       <ul className="space-y-1">
-        {videos.map((v) => (
-          <li key={v.id}>{v.title}</li>
-        ))}
+        {videos.map(v => <li key={v.id}>{v.title}</li>)}
       </ul>
     </main>
   );
 }
+
 //git add . && git commit -m "feat: blank dashboard" && git push
