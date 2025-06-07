@@ -27,9 +27,8 @@ export default function Dashboard() {
   const [uid,  setUid]  = useState<string>("");
   
   // 3) 실시간 채널 & 영상 구독
-  const [channels, setChannels] = useState<ChannelDoc[]>([]);
-  const [videos,   setVideos]   = useState<VideoDoc[]>([]);
-  const [url,      setUrl]      = useState<string>("");
+
+
 
   // ───────── onAuthStateChanged ─────────
   useEffect(() => {
@@ -63,6 +62,7 @@ export default function Dashboard() {
   }
 
   // ─── 2) channel subscription ────────────────────────────
+  const [channels, setChannels] = useState<ChannelDoc[]>([]);
   useEffect(() => {
     const colRef = collection(db, `users/${uid}/channels`);
     const q      = query(colRef, orderBy("createdAt", "desc"));
@@ -77,6 +77,7 @@ export default function Dashboard() {
   }, [uid]);
 
   // ─── 3) video subscription ──────────────────────────────
+  const [videos,   setVideos]   = useState<VideoDoc[]>([]);  
   useEffect(() => {
     const colRef = collection(db, `users/${uid}/videos`);
     const q      = query(colRef, orderBy("publishedAt", "desc"));
@@ -92,6 +93,7 @@ export default function Dashboard() {
 
 
   // 3.5) 채널 추가 삭제
+  const [url,      setUrl]      = useState<string>("");  
   const handleAdd = async () => {
     const trimmed = url.trim();
     if (!url.trim()) return;
@@ -121,7 +123,18 @@ export default function Dashboard() {
   //  </main>
   //);
 
-  
+  // ─── 5) 로딩 / 로그인 필요 화면 ───────────
+  if (user === undefined) {
+    return <p className="p-8 text-center">로딩 중...</p>;
+  }
+  if (!uid) {
+    return (
+      <main className="p-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">로그인이 필요합니다</h1>
+        <p>로그인 후 이용하세요.</p>
+      </main>
+    );
+  }
   // ───────── UI 렌더링 ─────────
   return (
     <main className="p-8 space-y-6 max-w-xl mx-auto">
