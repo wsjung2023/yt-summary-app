@@ -137,3 +137,4 @@ export default function Dashboard() {
 }
 
 //git add . && git commit -m "feat: blank dashboard" && git push
+//git add . && git commit -m "ci: disable ESLint errors on build" && git push
