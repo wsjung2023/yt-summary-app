@@ -15,7 +15,7 @@ export const ping = onRequest((req, res) => {
   res.send("pong");
 });
 export * from "./addChannel";
-export * from "./fetchVideos";   // ⬅︎ 추가
+export { fetchVideos } from "./fetchVideos";
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript

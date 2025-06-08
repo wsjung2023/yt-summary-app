@@ -14,11 +14,16 @@ import {
 import { db } from "@/lib/firestore";
 import { addChannelFn } from "@/lib/firebase";
 
+// ① functions 클라이언트 SDK 가져오기
+import { getFunctions, httpsCallable } from "firebase/functions";
+
 type ChannelDoc = { id: string; url: string };
 type VideoDoc   = { id: string; url: string; title: string; thumb: string };
 
 export default function Dashboard() {
   const router = useRouter();
+
+
 
   // ── 1) Auth 상태 ────────────────────────────────
   const [user, setUser] = useState<User | null | undefined>(undefined);
@@ -28,6 +33,9 @@ export default function Dashboard() {
   const [channels, setChannels] = useState<ChannelDoc[]>([]);
   const [videos,   setVideos]   = useState<VideoDoc[]>([]);
   const [url,      setUrl]      = useState<string>("");
+
+  // ── (추가) Firebase Functions 인스턴스 ────────────② 호출할 함수를 미리 초기화
+  const functions = getFunctions();
 
   // ── 3) onAuthStateChanged ─────────────────────────
   useEffect(() => {
@@ -72,18 +80,43 @@ export default function Dashboard() {
     return () => unsub();
   }, [uid]);
 
-  // ── 6) 핸들러들 ───────────────────────────────────
+  // ── 6) 채널 추가 + 영상 즉시 가져오기 ─────────────────
   const handleAdd = async () => {
-    const val = url.trim();
-    if (!val) return;
+    // 1) addChannel 호출
+    let res;
     try {
-      const res = await addChannelFn({ uid, url: val });
-      alert(`✅ 추가: ${res.data.id}`);
-      setUrl("");
+      res = await addChannelFn({ uid, url: url.trim() });
+      alert(`✅ 채널 추가 완료! id=${res.data.id}`);
     } catch (e: any) {
-      alert(`❌ 에러: ${e.message||e}`);
+      console.error("addChannel error", e);
+      alert(`❌ ${e.code || "error"}: ${e.message}\n${e.details || ""}`);
+      return;
     }
+
+    // 2) 추가된 채널 ID 로 fetchVideos 호출
+    try {
+      // fetchVideos 함수명과 파라미터 타입(요구에 따라 조정)
+      const fetchFn = httpsCallable<
+        { uid: string; channelId: string },
+        { count: number }
+      >(functions, "fetchVideos");
+
+      const { data } = await fetchFn({
+        uid,
+        channelId: res.data.id,
+      });
+
+      console.log(`🎉 ${data.count}개의 영상을 Firestore에 저장했어요.`);
+    } catch (e: any) {
+      console.error("fetchVideos 실패", e);
+      alert(`❌ fetchVideos error: ${e.message || e}`);
+    }
+
+    // 3) 입력창 비우기
+    setUrl("");
   };
+
+  // ── 6-1) 채널 삭제 ──────────────────────────────────
   const handleDelete = async (id: string) => {
     await deleteDoc(doc(db, `users/${uid}/channels/${id}`));
   };
@@ -112,16 +145,25 @@ export default function Dashboard() {
           placeholder="https://www.youtube.com/@channel"
           className="flex-1 border px-3 py-2 rounded"
         />
-        <button onClick={handleAdd} className="bg-indigo-600 text-white px-4 rounded">
+        <button
+          onClick={handleAdd}
+          className="bg-indigo-600 text-white px-4 rounded"
+        >
           추가
         </button>
       </div>
 
       <ul className="space-y-2">
         {channels.map(c => (
-          <li key={c.id} className="flex justify-between items-center border px-3 py-2 rounded">
+          <li
+            key={c.id}
+            className="flex justify-between items-center border px-3 py-2 rounded"
+          >
             <span className="truncate">{c.url}</span>
-            <button onClick={() => handleDelete(c.id)} className="text-red-500">
+            <button
+              onClick={() => handleDelete(c.id)}
+              className="text-red-500"
+            >
               ✖
             </button>
           </li>
@@ -130,7 +172,9 @@ export default function Dashboard() {
 
       <h2 className="text-xl font-bold pt-6">📺 최근 영상</h2>
       <ul className="space-y-1">
-        {videos.map(v => <li key={v.id}>{v.title}</li>)}
+        {videos.map(v => (
+          <li key={v.id}>{v.title}</li>
+        ))}
       </ul>
     </main>
   );
