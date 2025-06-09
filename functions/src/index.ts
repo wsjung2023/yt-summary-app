@@ -14,9 +14,10 @@ export const ping = onRequest((req, res) => {
   logger.info("Ping called"); // ← logger 를 실제로 사용
   res.send("pong");
 });
-export * from "./addChannel";
-export { fetchVideos } from "./fetchVideos";
-
+export { addChannel }      from "./addChannel";
+export { fetchVideos }     from "./fetchVideos";
+export { fetchVideosDaily } from "./fetchVideosDaily";  // ★ 반드시 포함
+ 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
