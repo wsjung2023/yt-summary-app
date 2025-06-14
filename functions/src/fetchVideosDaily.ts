@@ -16,13 +16,18 @@ const db = getFirestore();
 export async function fetchVideosDaily(                     // ✅ 시그니처 교체
   event: MessagePublishedData,   // v2 Cloud Event 형식
 ): Promise<void> {
-  console.log("[fetchVideosDaily] start");
+  console.log("[1] function start");
 
   const usersSnap = await db.collection("users").get();
+  console.log("[2] users count =", usersSnap.size);
+
   for (const userDoc of usersSnap.docs) {
     const uid = userDoc.id;
+    console.log(`── [2-1] user ${uid}`);
     const chSnap = await db.collection(`users/${uid}/channels`).get();
+    console.log(`──── [2-2] channels =`, chSnap.size);
     for (const ch of chSnap.docs) {
+      console.log(`────── [3] call logic uid=${uid} ch=${ch.id}`);
       await fetchVideosLogic({ uid, channelId: ch.id });
     }
   }
