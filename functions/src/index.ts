@@ -17,7 +17,7 @@ export const ping = onRequest((req, res) => {
 export { addChannel }      from "./addChannel";
 export { fetchVideos }     from "./fetchVideos";
 export { fetchVideosDaily } from "./fetchVideosDaily";  // ★ 반드시 포함
- 
+
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
