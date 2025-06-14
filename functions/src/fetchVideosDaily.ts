@@ -1,5 +1,8 @@
 // functions/src/fetchVideosDaily.ts
-import type { PubSubMessage } from "@google-cloud/pubsub";
+import type { MessagePublishedData } from
+  "@google/events/cloud/pubsub/v1/MessagePublishedData";   // ✅ 교체
+// import type { PubSubMessage } from "@google-cloud/pubsub"; ← 지움
+
 import { getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { fetchVideosLogic } from "./shared/fetchVideosLogic";
@@ -8,14 +11,12 @@ if (!getApps().length) initializeApp();
 const db = getFirestore();
 
 /**
- * Pub/Sub-triggered 작업자  
- * (Cloud Scheduler 가 “fetchvideos-daily” 토픽에 빈 메시지를 발행)
+ * Pub/Sub trigger (Cloud Scheduler → fetchvideos-daily 토픽)
  */
-export async function fetchVideosDaily(
-  message: PubSubMessage,              // ① 메시지(본문은 안 씀)
-  context: { timestamp: string }       // ② context(필요 없으면 생략해도 OK)
+export async function fetchVideosDaily(                     // ✅ 시그니처 교체
+  event: MessagePublishedData,   // v2 Cloud Event 형식
 ): Promise<void> {
-  console.log("[fetchVideosDaily] start — scheduler timestamp:", context.timestamp);
+  console.log("[fetchVideosDaily] start");
 
   const usersSnap = await db.collection("users").get();
   for (const userDoc of usersSnap.docs) {
