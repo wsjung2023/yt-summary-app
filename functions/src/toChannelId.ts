@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 /**
  * 채널 URL / @handle / legacy user name → UC… 채널 ID 변환
  * 실패 시 Error throw
