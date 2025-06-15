@@ -19,15 +19,15 @@ export async function fetchVideosDaily(                     // ✅ 시그니처 
   console.log("[1] function start");
 
   const usersSnap = await db.collection("users").get();
-  console.log("[2] users count =", usersSnap.size);
+  console.log("[2] users snapshot", usersSnap.size);
 
   for (const userDoc of usersSnap.docs) {
     const uid = userDoc.id;
     console.log(`── [2-1] user ${uid}`);
     const chSnap = await db.collection(`users/${uid}/channels`).get();
-    console.log(`──── [2-2] channels =`, chSnap.size);
+    console.log("[3] channel loop start", uid, chSnap.size);
     for (const ch of chSnap.docs) {
-      console.log(`────── [3] call logic uid=${uid} ch=${ch.id}`);
+      console.log(`────── [4] call logic uid=${uid} ch=${ch.id}`);
       await fetchVideosLogic({ uid, channelId: ch.id });
     }
   }
