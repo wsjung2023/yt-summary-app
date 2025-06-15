@@ -15,7 +15,8 @@ import { db } from "@/lib/firestore";
 import { addChannelFn } from "@/lib/firebase";
 
 // ① functions 클라이언트 SDK 가져오기
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
+import { functions }     from "@/lib/firebase";   // 이미 초기화돼 있는 인스턴스
 
 type ChannelDoc = { id: string; url: string };
 type VideoDoc   = { id: string; url: string; title: string; thumb: string };
@@ -34,8 +35,6 @@ export default function Dashboard() {
   const [videos,   setVideos]   = useState<VideoDoc[]>([]);
   const [url,      setUrl]      = useState<string>("");
 
-  // ── (추가) Firebase Functions 인스턴스 ────────────② 호출할 함수를 미리 초기화
-  const functions = getFunctions();
 
   // ── 3) onAuthStateChanged ─────────────────────────
   useEffect(() => {
@@ -85,8 +84,8 @@ export default function Dashboard() {
     // 1) addChannel 호출
     let res;
     try {
-      res = await addChannelFn({ uid, url: url.trim() });
-      alert(`✅ 채널 추가 완료! id=${res.data.id}`);
+     res = await addChannelFn({ uid, input: url.trim() });
+     alert(`✅ 채널 추가 완료! id=${res.data.channelId}`);
     } catch (e: any) {
       console.error("addChannel error", e);
       alert(`❌ ${e.code || "error"}: ${e.message}\n${e.details || ""}`);
@@ -103,7 +102,7 @@ export default function Dashboard() {
 
       const { data } = await fetchFn({
         uid,
-        channelId: res.data.id,
+        channelId: res.data.channelId,
       });
 
       console.log(`🎉 ${data.count}개의 영상을 Firestore에 저장했어요.`);
